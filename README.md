@@ -47,6 +47,11 @@ export default {
 - اگه Secret `TRAFFIC_LIMIT_GB` رو بذاری (مثلاً `100`)، نوار پیشرفت و مقدار باقی‌مونده نشون داده میشه و توی ۸۰٪ و ۱۰۰٪ هشدار میده.
 - دکمه‌ی **Reset counter** همه‌ی شمارنده‌ها رو صفر می‌کنه (فقط بعد از ورود به پنل).
 
+### آپدیت
+دکمه‌ی ⟳ بالای پنل آخرین Release این ریپو رو توی گیت‌هاب چک می‌کنه؛ اگه نسخه‌ی جدید باشه یه نقطه‌ی سبز روش میاد.
+- با Secret `GITHUB_TOKEN` (توکن fine-grained با دسترسی **Contents: Read and write** روی فورک خودت) با یه کلیک فورکت Sync میشه و Railway خودش دوباره دیپلوی می‌کنه.
+- بدون توکن، صفحه‌ی گیت‌هاب باز میشه؛ اونجا **Sync fork** رو بزن.
+
 ### کدوم لینک؟
 - **VLESS-WS-TLS** و **VMess-WS-TLS**: همه‌ی کلاینت‌ها (v2rayNG، v2rayN، Hiddify، NekoBox، sing-box، Clash Meta).
 - **Trojan-WS-TLS**: بیشتر کلاینت‌ها.
@@ -87,6 +92,11 @@ The panel's **Usage** tab shows traffic per config (VLESS WS, VMess WS, Trojan W
 - The counter is saved in the data folder: it survives restarts but resets on every **Publish**. Use the **Sync** field to set this month's number from Replit (no Secret needed).
 - Set the `TRAFFIC_LIMIT_GB` Secret (e.g. `100`) to get a progress bar with the remaining amount and warnings at 80% and 100%.
 - **Reset counter** clears all counters (panel login required).
+
+### Updates
+The ⟳ button in the panel header checks this repo's latest GitHub Release; a green dot means a newer version is out.
+- With a `GITHUB_TOKEN` Secret (fine-grained token, **Contents: Read and write** on your fork) one click syncs your fork and Railway redeploys by itself.
+- Without a token it opens GitHub; press **Sync fork** there.
 
 ### Which link?
 - **VLESS-WS-TLS** / **VMess-WS-TLS**: any client (v2rayNG, v2rayN, Hiddify, NekoBox, sing-box, Clash Meta).

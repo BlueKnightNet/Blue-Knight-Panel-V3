@@ -1,6 +1,6 @@
 {
   "name": "blue-knight-gate",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Blue Knight Gate - multi-protocol proxy and web panel (Railway edition)",
   "main": "index.js",
   "scripts": {
