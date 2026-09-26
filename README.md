@@ -1,96 +1,132 @@
-# Blue Knight Gate — Railway Edition
+# Blue Knight Gate — Replit Edition
 
-پنل Blue Knight آماده‌ی دیپلوی روی Railway از طریق GitHub.
-Telegram: https://t.me/BlueKnight_Net · YouTube: https://www.youtube.com/@BlueKnight-Net
+پنل VLESS / VMess / Trojan / XHTTP روی Replit — **ایمپورت کن، Publish کن؛ متغیری لازم نیست.**
+
+A VLESS / VMess / Trojan / XHTTP panel for Replit — **import, publish, done; no variables needed.**
 
 ## فارسی
 
-### ۱) فورک
-روی **Fork** بالای همین صفحه بزن تا یه کپی توی اکانت گیت‌هاب خودت ساخته بشه.
+### راه‌اندازی
+1. توی Replit: **Create App → Import from GitHub** → این ریپو (یا فورک خودت).
+2. **Publish** رو بزن (Autoscale یا Reserved VM). یه آدرس `https://<name>.replit.app` می‌گیری.
+3. برو به `https://<name>.replit.app/knight` و رمز پنل رو بساز.
+4. اگه `replit.app` توی ایران فیلتره، یه **Cloudflare Worker** بساز (پایین‌تر).
+5. پنل رو از آدرس Worker باز کن (`https://<worker>.workers.dev/knight`)؛ لینک‌ها خودکار روی آدرس Worker میرن.
+6. کانفیگ‌ها یا لینک ساب رو کپی کن و توی کلاینتت وارد کن.
 
-### ۲) دیپلوی روی Railway
-1. وارد railway.com شو (Login with GitHub).
-2. **New Project** ← **Deploy from GitHub repo** ← ریپوی فورک‌شده.
-3. **Variables**:
-   - `PORT` = `8080`
-   - `BK_DATA_DIR` = `/data`
-   - `SETUP_KEY` = یه کلید تصادفی (اختیاری ولی پیشنهادی؛ فقط برای ساخت رمز بار اول لازمه)
-4. یه **Volume** با Mount Path `/data` وصل کن (UUID و رمز پنل اینجا ذخیره میشن).
-5. **Settings ← Networking ← Generate Domain** با پورت `8080`.
-6. صبر کن دیپلوی سبز (Active) بشه.
+پورت، دامنه و TLS خودکار تنظیم میشن: همه‌ی لینک‌ها پورت `443` با TLS هستن.
 
-### ۳) ورود به پنل
-1. برو `https://YOUR-DOMAIN.up.railway.app/knight`
-2. **بار اول** صفحه‌ی «ساخت رمز پنل» میاد: رمز (حداقل ۸ کاراکتر) و تکرارش رو بزن (و اگه `SETUP_KEY` گذاشتی، اونم وارد کن).
-3. دفعه‌های بعد با همون رمز وارد میشی. خروج: `/knight/logout`
-4. بعد از دیپلوی سریع رمز بساز؛ تا وقتی رمز ساخته نشده، اولین کسی که آدرس رو باز کنه می‌تونه رمز بسازه (برای همین `SETUP_KEY` پیشنهاد میشه).
+### Cloudflare Worker (وقتی replit.app فیلتره)
+1. **dash.cloudflare.com → Workers & Pages → Create → Worker** → Deploy.
+2. **Edit code**، کد زیر رو جایگزین کن، `ORIGIN` رو آدرس `replit.app` خودت بذار و **Deploy** کن.
+3. پنل رو با `https://<worker>.workers.dev/knight` باز کن و کانفیگ‌ها رو دوباره کپی کن.
 
-### ۴) کانفیگ‌ها
-فقط این‌ها روی Railway کار می‌کنن: **VLESS-WS-TLS**، **VMess-WS-TLS**، **Trojan-WS-TLS** و **VLESS-XHTTP-TLS** (فقط کلاینت‌های Xray) — همه روی پورت 443 با دامنه‌ی Railway.
-لینک‌های ساب داخل پنل خودشون یه `token` مخصوص دارن؛ همونو توی v2rayNG / Hiddify بزن. این لینک رو پخش نکن.
+```js
+const ORIGIN = "YOUR-APP.replit.app";
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    const relayHost = url.hostname;
+    url.hostname = ORIGIN; url.protocol = "https:"; url.port = "";
+    const headers = new Headers(request.headers);
+    headers.set("Host", ORIGIN);
+    headers.set("X-Forwarded-Host", relayHost);
+    return fetch(new Request(url, { method: request.method, headers, body: request.body, redirect: "manual" }));
+  },
+};
+```
 
-### تنظیمات TLS لینک‌ها (اختیاری)
-| متغیر | پیش‌فرض | توضیح |
-|---|---|---|
-| `DOMAIN` / `FORCE_HOST` | دامنه‌ی Railway | آدرس، Host و SNI لینک‌ها. اگه لینک‌ها IP نشون میدن، دامنه‌ت رو اینجا بذار (بدون `https://`). |
-| `LINK_FP` | `chrome` | فینگرپرینت uTLS: `chrome` `firefox` `safari` `edge` `ios` `android` `random` `randomized` `360` `qq` یا `none` |
-| `LINK_ALPN` | `http/1.1` | برای WebSocket باید `http/1.1` بمونه. `none` = حذف |
-| `TLS_CIPHERS` | خالی | لیست cipher با کاما؛ فقط توی ساب sing-box (`tls.cipher_suites`) اعمال میشه. لینک‌های v2ray فیلد استاندارد cipher ندارن. |
-| `LINK_SNI` / `LINK_HOST` | همون دامنه | برای CDN/دامنه‌ی سفارشی: SNI و هدر Host جدا. روی خود Railway باید دامنه‌ی Railway یا دامنه‌ی متصل‌شده باشن. |
+پنل آدرس Worker رو از `X-Forwarded-Host` می‌فهمه و ذخیره می‌کنه. اگه خواستی دستی تعیین کنی، Secret به اسم `DOMAIN` با مقدار آدرس Worker بذار (اولویت با `DOMAIN` هست).
 
-### VLESS + XHTTP (فقط کلاینت‌های Xray)
-پنل موقع اجرا خودش **Xray-core** رو دانلود می‌کنه (آخرین نسخه‌ی پایدار، با چک SHA-256) و یه لینک **VLESS-XHTTP-TLS** هم می‌سازه (پورت 443، TLS روی لبه‌ی Railway).
-- کلاینت‌هایی که پشتیبانی می‌کنن: **v2rayNG**، **v2rayN**، **Hiddify** (با هسته‌ی Xray)، Streisand/V2Box با هسته‌ی Xray. کلاینت‌های sing-box و Clash **XHTTP ندارن**، برای همین این لینک فقط توی ساب v2ray (base64) هست، نه توی ساب Clash یا sing-box.
-- لینک پیش‌فرض: `type=xhttp&mode=packet-up&alpn=h2`. لبه‌ی Railway روی h2 مذاکره می‌کنه و کلاینت Xray باید با همون ALPN وصل بشه؛ `alpn=http/1.1` با فینگرپرینت uTLS روی Railway کار **نمی‌کنه**.
+به‌صورت زنده تست شده: VLESS-WS-TLS و VMess-WS-TLS از طریق Worker کار می‌کنن.
 
-| متغیر | پیش‌فرض | توضیح |
-|---|---|---|
-| `ENABLE_XHTTP` | روی Railway `true` | `false` = Xray دانلود/اجرا نمیشه و لینک XHTTP حذف میشه |
-| `XRAY_VERSION` | آخرین نسخه | پین کردن نسخه، مثلاً `26.3.27` |
-| `XRAY_URL` | خالی | آدرس zip دلخواه برای دانلود Xray |
-| `XHTTP_MODE` | `packet-up` | مود داخل لینک: `packet-up` `stream-up` `stream-one` `auto` (سرور همه رو قبول می‌کنه) |
-| `XHTTP_ALPN` | `h2` | ALPN داخل لینک XHTTP. `none` = حذف |
+### مصرف ترافیک
+تب **Usage** توی پنل مصرف هر کانفیگ (VLESS WS، VMess WS، Trojan WS، XHTTP) رو جدا نشون میده: آپلود، دانلود و جمع، برای امروز، این ماه (از ساعت 00:00 UTC روز اول ماه، مثل Replit) و کل زمان، همراه سرعت لحظه‌ای.
+- این عدد **تخمینیه**؛ عدد واقعی صفحه‌ی **Account → Usage** توی Replit هست.
+- شمارنده توی پوشه‌ی داده ذخیره میشه: بعد از ری‌استارت می‌مونه، ولی با هر **Publish** صفر میشه. با فیلد **Sync** عدد ماه رو با Replit یکی کن (Secret لازم نیست).
+- اگه Secret `TRAFFIC_LIMIT_GB` رو بذاری (مثلاً `100`)، نوار پیشرفت و مقدار باقی‌مونده نشون داده میشه و توی ۸۰٪ و ۱۰۰٪ هشدار میده.
+- دکمه‌ی **Reset counter** همه‌ی شمارنده‌ها رو صفر می‌کنه (فقط بعد از ورود به پنل).
 
-### رمز یادت رفت؟
-متغیر `RESET_PANEL_PASSWORD=true` رو بذار، Redeploy کن، رمز جدید بساز، بعد **حتماً این متغیر رو پاک کن**.
+### کدوم لینک؟
+- **VLESS-WS-TLS** و **VMess-WS-TLS**: همه‌ی کلاینت‌ها (v2rayNG، v2rayN، Hiddify، NekoBox، sing-box، Clash Meta).
+- **Trojan-WS-TLS**: بیشتر کلاینت‌ها.
+- **VLESS-XHTTP-TLS**: فقط کلاینت‌های با هسته‌ی **Xray** (v2rayNG، v2rayN، Hiddify با هسته‌ی Xray).
+- لینک ساب یه `token` خصوصی داره؛ پخشش نکن.
 
-### نکته‌ها
-- اگه `up.railway.app` باز نشد، **Custom Domain** وصل کن و `DOMAIN` رو هم ست کن.
-- Railway پلن رایگان دائمی نداره؛ قیمت‌ها رو از صفحه‌ی Pricing چک کن.
-- آپدیت: توی فورکت **Sync fork** بزن؛ Railway خودکار دوباره دیپلوی می‌کنه.
+### مشکل داری؟
+- **آدرس `.replit.dev` کار نمی‌کنه:** اون آدرس خصوصی محیط ویرایشه. حتماً **Publish** کن و از `.replit.app` یا Worker استفاده کن.
+- **فقط کانفیگ‌های TLS (پورت 443):** روی Replit فقط 443 عمومیه؛ کانفیگ بدون TLS هیچ‌وقت وصل نمیشه.
+- **تست:** از **Real delay** یا تست URL استفاده کن، نه TCP ping.
+- **IP تمیز:** فقط address رو با یه IP تمیز کلادفلر (از اسکنر) عوض کن؛ `sni` و `host` روی آدرس Worker بمونن.
+- **بعد از هر Publish رمز و کانفیگ‌ها عوض میشن:** فایل‌های اپ Publish‌شده روی Replit موندگار نیستن. برای ثابت موندن، توی **Publishing → Secrets** این‌ها رو بذار: `UUID`، `PANEL_PASSWORD`، `SUB_TOKEN`.
 
 ## English
 
-1. **Fork** this repo.
-2. Railway: **New Project → Deploy from GitHub repo** → your fork.
-3. Variables: `PORT=8080`, `BK_DATA_DIR=/data`, optional `SETUP_KEY` (required only for first password creation).
-4. Add a **Volume** at `/data`.
-5. **Settings → Networking → Generate Domain**, port `8080`.
-6. Open `https://<domain>/knight`. First visit asks you to create a panel password; after that you log in with it. Logout: `/knight/logout`.
-7. Use **VLESS-WS-TLS**, **VMess-WS-TLS**, **Trojan-WS-TLS** or **VLESS-XHTTP-TLS** (Xray clients) links (port 443, Railway domain). Subscription URLs in the panel include a private `token`.
+### Setup
+1. Replit: **Create App → Import from GitHub** → this repo (or your fork).
+2. Click **Publish** (Autoscale or Reserved VM). You get `https://<name>.replit.app`.
+3. Open `https://<name>.replit.app/knight` and create the panel password.
+4. If `replit.app` is filtered (e.g. in Iran), create a **Cloudflare Worker** (below).
+5. Open the panel through the Worker (`https://<worker>.workers.dev/knight`); links switch to the Worker address automatically.
+6. Copy the configs or the subscription link into your client.
 
-Forgot password: set `RESET_PANEL_PASSWORD=true`, redeploy, create a new one, then remove the variable.
-Only WebSocket / XHTTP over TLS on port 443 works on Railway. Optional overrides: `DOMAIN`, `FORCE_HOST`, `LINK_PORT`, `PUBLIC_BASE_URL`.
+Port, domain and TLS are set automatically: every link uses port `443` with TLS.
 
-### Link TLS options (optional env vars)
-| Variable | Default | Meaning |
+### Cloudflare Worker (when replit.app is filtered)
+1. **dash.cloudflare.com → Workers & Pages → Create → Worker** → Deploy.
+2. **Edit code**, paste the code above (Persian section), set `ORIGIN` to your `replit.app` address, then **Deploy**.
+3. Open `https://<worker>.workers.dev/knight` and copy the configs again.
+
+The panel learns the Worker address from `X-Forwarded-Host` and saves it. To set it by hand, add a `DOMAIN` Secret with the Worker address (`DOMAIN` always wins).
+
+Tested live: VLESS-WS-TLS and VMess-WS-TLS work through the Worker.
+
+### Traffic usage
+The panel's **Usage** tab shows traffic per config (VLESS WS, VMess WS, Trojan WS, XHTTP): upload, download and total for today, this month (from 00:00 UTC on the 1st, like Replit's meter) and all time, plus live speed.
+- It's an **estimate**; Replit's **Account → Usage** page is the real meter.
+- The counter is saved in the data folder: it survives restarts but resets on every **Publish**. Use the **Sync** field to set this month's number from Replit (no Secret needed).
+- Set the `TRAFFIC_LIMIT_GB` Secret (e.g. `100`) to get a progress bar with the remaining amount and warnings at 80% and 100%.
+- **Reset counter** clears all counters (panel login required).
+
+### Which link?
+- **VLESS-WS-TLS** / **VMess-WS-TLS**: any client (v2rayNG, v2rayN, Hiddify, NekoBox, sing-box, Clash Meta).
+- **Trojan-WS-TLS**: most clients.
+- **VLESS-XHTTP-TLS**: **Xray-core** clients only (v2rayNG, v2rayN, Hiddify with the Xray core).
+- Subscription URLs contain a private `token` — don't share them.
+
+### Troubleshooting
+- **The `.replit.dev` URL doesn't work:** it's the private editor URL. **Publish** and use `.replit.app` or the Worker.
+- **Use only the TLS configs (port 443):** only 443 is public on Replit; non-TLS configs never connect.
+- **Testing:** use **Real delay** or the URL test, not TCP ping.
+- **Clean IP:** change only the address to a clean Cloudflare IP (from a scanner); keep `sni` / `host` on the Worker address.
+- **Password / configs change after every Publish:** a published Replit app's files are not persistent. To keep them, add these in **Publishing → Secrets**: `UUID`, `PANEL_PASSWORD`, `SUB_TOKEN`.
+
+<details>
+<summary><b>Optional settings (not required) / تنظیمات اختیاری (لازم نیست)</b></summary>
+
+Replit → **Publishing → Secrets** (deployment Secrets are separate from the editor's; publish again after changing them). / همه اختیاری‌ان.
+
+| Secret | Default | Meaning |
 |---|---|---|
-| `DOMAIN` / `FORCE_HOST` | Railway domain (`RAILWAY_PUBLIC_DOMAIN`) | Address, Host and SNI used in links. Set this if links show an IP (bare hostname, no `https://`). |
-| `LINK_FP` | `chrome` | uTLS fingerprint in links / Clash (`client-fingerprint`) / sing-box (`utls`): `chrome firefox safari edge ios android random randomized 360 qq`, or `none` to omit |
-| `LINK_ALPN` | `http/1.1` | Comma list; keep `http/1.1` for WebSocket. `none` = omit |
-| `TLS_CIPHERS` | empty | Comma list (e.g. `TLS_AES_128_GCM_SHA256,TLS_CHACHA20_POLY1305_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`). Only applied to the sing-box subscription (`tls.cipher_suites`); v2ray share links have no standard cipher field. Note: Go ignores TLS 1.3 suite choices and uTLS fingerprints use their own suite list. |
-| `LINK_SNI` / `LINK_HOST` | same as domain | Separate SNI / WS Host header for CDN fronting or a custom domain. On plain Railway both must be your Railway (or attached custom) domain. |
-| `LINK_PORT` / `LINK_TLS` | `443` / auto | Override port shown in links / force TLS links on or off. |
+| `DOMAIN` | `replit.app` address / Worker address you open the panel with | Force the domain used in links (bare hostname) |
+| `UUID` | random, saved in the data folder | Fixed UUID so configs survive a new Publish |
+| `PANEL_PASSWORD` | – | Fixed panel password (8+ characters); skips the create-password page |
+| `SUB_TOKEN` | random | Fixed subscription token so subscription URLs survive a new Publish |
+| `SETUP_KEY` | empty | Extra key asked for when creating the password the first time |
+| `RESET_PANEL_PASSWORD` | – | `true` → publish → create a new password → **delete the secret** |
+| `FORCE_HOST` | – | Force the link address (e.g. a clean IP); SNI/Host stay on `DOMAIN` |
+| `LINK_SNI` / `LINK_HOST` | link domain | Separate SNI / WS Host header |
+| `LINK_PORT` / `LINK_TLS` | `443` / on | Port in links / TLS on or off (not needed on Replit) |
+| `LINK_FP` | `chrome` | uTLS fingerprint: `chrome` `firefox` `safari` `edge` `ios` `android` `random` `randomized` `360` `qq`, or `none` |
+| `LINK_ALPN` | `http/1.1` | ALPN for WS links (keep `http/1.1`); `none` = omit |
+| `ENABLE_XHTTP` | `true` | `false` = no Xray, no XHTTP link |
+| `XRAY_VERSION` / `XRAY_URL` | latest | Pin the Xray-core version / custom zip URL |
+| `XHTTP_MODE` | `packet-up` | `packet-up`, `stream-up`, `stream-one` or `auto` |
+| `XHTTP_ALPN` | `h2` | ALPN in the XHTTP link |
+| `TRAFFIC_LIMIT_GB` | none | Monthly allowance in GiB for the Usage tab (progress bar, warnings at 80% / 100%) |
+| `BK_DATA_DIR` | `./bk-data` | Data folder (password, UUID, configs) |
+| `PORT` | `8080` | Listening port (matches `.replit`) |
 
-### VLESS + XHTTP (Xray clients only)
-At startup the panel downloads **Xray-core** (latest stable, SHA-256 verified against the release `.dgst`, cached in `BK_DATA_DIR/bin`) and serves a **VLESS-XHTTP-TLS** link on port 443 (TLS terminated by Railway's edge; Xray listens on `127.0.0.1` behind the panel's HTTP multiplexer).
-- Supported clients: **v2rayNG**, **v2rayN**, **Hiddify** (Xray core), Streisand / V2Box (Xray core). sing-box and Clash/Mihomo clients do **not** support XHTTP, so the link is only in the v2ray (base64) subscription, not in the Clash or sing-box subscriptions.
-- Default link: `type=xhttp&mode=packet-up&alpn=h2`. Railway's edge negotiates h2 and Xray's XHTTP client must use the same HTTP version as the edge; `alpn=http/1.1` (with a uTLS fingerprint) fails on Railway.
+Railway still works as a fallback (same code, `RAILWAY_*` detection).
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `ENABLE_XHTTP` | `true` on Railway | `false` = don't download/run Xray, hide the XHTTP link |
-| `XRAY_VERSION` | latest | Pin a version, e.g. `26.3.27` |
-| `XRAY_URL` | empty | Custom Xray zip URL |
-| `XHTTP_MODE` | `packet-up` | Mode written in the link: `packet-up`, `stream-up`, `stream-one`, `auto` (server accepts all) |
-| `XHTTP_ALPN` | `h2` | ALPN written in the XHTTP link; `none` = omit |
+</details>
