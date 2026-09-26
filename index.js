@@ -12,7 +12,7 @@
 // ========== BLUE KNIGHT GATE — EDIT ME ==========
 // Bump on every GitHub release (tag vX.Y.Z); the panel's Update button compares it with the latest release.
 const BK_VERSION = '1.1.0';
-const BK_UPDATE_REPO = 'BlueKnightNet/Blue-Knight-Panel-Railway';
+const BK_UPDATE_REPO = 'BlueKnightNet/Blue-Knight-Panel-Replit';
 const BK_RESTART_CODE = 75; // child exit code that makes the supervisor (bottom of file) start the updated index.js
 let bkRestart = null; // set by startGate: graceful stop, then exit BK_RESTART_CODE
 
