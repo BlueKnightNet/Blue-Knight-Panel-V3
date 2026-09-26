@@ -49,8 +49,8 @@ export default {
 
 ### آپدیت
 دکمه‌ی ⟳ بالای پنل آخرین Release این ریپو رو توی گیت‌هاب چک می‌کنه؛ اگه نسخه‌ی جدید باشه یه نقطه‌ی سبز روش میاد.
-- با Secret `GITHUB_TOKEN` (توکن fine-grained با دسترسی **Contents: Read and write** روی فورک خودت) با یه کلیک فورکت Sync میشه و Railway خودش دوباره دیپلوی می‌کنه.
-- بدون توکن، صفحه‌ی گیت‌هاب باز میشه؛ اونجا **Sync fork** رو بزن.
+- روش بزن: پنل نسخه‌ی جدید رو از گیت‌هاب دانلود می‌کنه و خودش ری‌استارت میشه (حدود ۳۰ ثانیه، بدون تنظیمات).
+- با Redeploy بعدی Railway دوباره نسخه‌ی ریپوی خودت اجرا میشه؛ برای موندگاری فورکت رو Sync کن، یا Secret `GITHUB_TOKEN` (توکن fine-grained با دسترسی **Contents: Read and write** روی فورک) بذار تا دکمه خودش فورک رو Sync کنه و Railway دیپلوی کنه.
 
 ### کدوم لینک؟
 - **VLESS-WS-TLS** و **VMess-WS-TLS**: همه‌ی کلاینت‌ها (v2rayNG، v2rayN، Hiddify، NekoBox، sing-box، Clash Meta).
@@ -95,8 +95,8 @@ The panel's **Usage** tab shows traffic per config (VLESS WS, VMess WS, Trojan W
 
 ### Updates
 The ⟳ button in the panel header checks this repo's latest GitHub Release; a green dot means a newer version is out.
-- With a `GITHUB_TOKEN` Secret (fine-grained token, **Contents: Read and write** on your fork) one click syncs your fork and Railway redeploys by itself.
-- Without a token it opens GitHub; press **Sync fork** there.
+- Click it: the panel downloads the new version from GitHub and restarts itself (about 30 seconds, no setup).
+- A later Railway redeploy runs your repo's version again. To keep the update, sync your fork, or add a `GITHUB_TOKEN` Secret (fine-grained token, **Contents: Read and write** on your fork) so the button syncs the fork and Railway redeploys.
 
 ### Which link?
 - **VLESS-WS-TLS** / **VMess-WS-TLS**: any client (v2rayNG, v2rayN, Hiddify, NekoBox, sing-box, Clash Meta).
