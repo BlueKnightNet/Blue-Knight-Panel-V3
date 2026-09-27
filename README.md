@@ -47,11 +47,6 @@ export default {
 - اگه Secret `TRAFFIC_LIMIT_GB` رو بذاری (مثلاً `100`)، نوار پیشرفت و مقدار باقی‌مونده نشون داده میشه و توی ۸۰٪ و ۱۰۰٪ هشدار میده.
 - دکمه‌ی **Reset counter** همه‌ی شمارنده‌ها رو صفر می‌کنه (فقط بعد از ورود به پنل).
 
-### آپدیت
-دکمه‌ی ⟳ بالای پنل آخرین Release این ریپو رو توی گیت‌هاب چک می‌کنه؛ اگه نسخه‌ی جدید باشه یه نقطه‌ی سبز روش میاد.
-- روش بزن: پنل نسخه‌ی جدید رو از گیت‌هاب دانلود می‌کنه و خودش ری‌استارت میشه (حدود ۳۰ ثانیه، بدون تنظیمات).
-- با Redeploy بعدی Railway دوباره نسخه‌ی ریپوی خودت اجرا میشه؛ برای موندگاری فورکت رو Sync کن، یا Secret `GITHUB_TOKEN` (توکن fine-grained با دسترسی **Contents: Read and write** روی فورک) بذار تا دکمه خودش فورک رو Sync کنه و Railway دیپلوی کنه.
-
 ### کدوم لینک؟
 - **VLESS-WS-TLS** و **VMess-WS-TLS**: همه‌ی کلاینت‌ها (v2rayNG، v2rayN، Hiddify، NekoBox، sing-box، Clash Meta).
 - **Trojan-WS-TLS**: بیشتر کلاینت‌ها.
@@ -93,11 +88,6 @@ The panel's **Usage** tab shows traffic per config (VLESS WS, VMess WS, Trojan W
 - Set the `TRAFFIC_LIMIT_GB` Secret (e.g. `100`) to get a progress bar with the remaining amount and warnings at 80% and 100%.
 - **Reset counter** clears all counters (panel login required).
 
-### Updates
-The ⟳ button in the panel header checks this repo's latest GitHub Release; a green dot means a newer version is out.
-- Click it: the panel downloads the new version from GitHub and restarts itself (about 30 seconds, no setup).
-- A later Railway redeploy runs your repo's version again. To keep the update, sync your fork, or add a `GITHUB_TOKEN` Secret (fine-grained token, **Contents: Read and write** on your fork) so the button syncs the fork and Railway redeploys.
-
 ### Which link?
 - **VLESS-WS-TLS** / **VMess-WS-TLS**: any client (v2rayNG, v2rayN, Hiddify, NekoBox, sing-box, Clash Meta).
 - **Trojan-WS-TLS**: most clients.
@@ -129,7 +119,14 @@ Replit → **Publishing → Secrets** (deployment Secrets are separate from the 
 | `LINK_PORT` / `LINK_TLS` | `443` / on | Port in links / TLS on or off (not needed on Replit) |
 | `LINK_FP` | `chrome` | uTLS fingerprint: `chrome` `firefox` `safari` `edge` `ios` `android` `random` `randomized` `360` `qq`, or `none` |
 | `LINK_ALPN` | `http/1.1` | ALPN for WS links (keep `http/1.1`); `none` = omit |
-| `ENABLE_XHTTP` | `true` | `false` = no Xray, no XHTTP link |
+| `ENABLE_XHTTP` | `true` | `false` = no XHTTP link (Xray is still used if `ENABLE_SS_WS` is on) |
+| `ENABLE_VLESS_WS` / `ENABLE_VLESS_WS_TLS` / `ENABLE_VMESS_WS` / `ENABLE_VMESS_WS_TLS` | `true` | Turn single WS configs on/off |
+| `ENABLE_TROJAN_WS` / `ENABLE_TROJAN_WS_TLS` | `true` | Trojan-WS / Trojan-WS-TLS |
+| `ENABLE_HTTPUPGRADE` / `ENABLE_VMESS_HTTPUPGRADE` / `ENABLE_TROJAN_HTTPUPGRADE` | `true` | VLESS / VMess / Trojan HTTPUpgrade |
+| `ENABLE_VLESS_GRPC` / `ENABLE_VLESS_GRPC_TLS` | `true` | VLESS gRPC (h2c) / VLESS gRPC-TLS — self-hosted port only |
+| `ENABLE_SS_WS` | `true` | Shadowsocks over WebSocket (v2ray-plugin compatible, served by Xray) — self-hosted port only |
+| `SS_METHOD` / `SS_PASSWORD` | `aes-256-gcm` / random | Shadowsocks cipher (`aes-256-gcm`, `chacha20-ietf-poly1305`, `2022-blake3-aes-256-gcm`, …). 2022 ciphers need a base64 key (`openssl rand -base64 32`); an invalid one is replaced by a generated key |
+| `LINK_ALLOW_INSECURE` | `true` | Self-signed cert only: `false` = drop `allowInsecure=1` from links (links always carry `pcs=` = cert SHA-256 for Xray ≥ 26.2) |
 | `XRAY_VERSION` / `XRAY_URL` | latest | Pin the Xray-core version / custom zip URL |
 | `XHTTP_MODE` | `packet-up` | `packet-up`, `stream-up`, `stream-one` or `auto` |
 | `XHTTP_ALPN` | `h2` | ALPN in the XHTTP link |
@@ -138,5 +135,26 @@ Replit → **Publishing → Secrets** (deployment Secrets are separate from the 
 | `PORT` | `8080` | Listening port (matches `.replit`) |
 
 Railway still works as a fallback (same code, `RAILWAY_*` detection).
+
+</details>
+
+<details>
+<summary><b>Self-hosted single port (bot-hosting.net / Pterodactyl, VPS)</b></summary>
+
+Everything shares the ONE allocated port (`SERVER_PORT` / `PORT`). The built-in multiplexer routes each connection:
+
+| Config | How it is recognised on the shared port | Engine |
+|---|---|---|
+| VLESS-WS, VMess-WS, Trojan-WS | HTTP Upgrade, path `…--ws` / `…--vmess` / `…--trojan` | sing-box |
+| VLESS/VMess/Trojan-HTTPUpgrade | HTTP Upgrade, path `…--httpupgrade` / `…--vmess-hu` / `…--trojan-hu` | sing-box |
+| VLESS-XHTTP | HTTP requests under `…--xhttp` | Xray-core |
+| Shadowsocks-WS | HTTP Upgrade, path `…--ss` (v2ray-plugin `mode=websocket;mux=0`) | Xray-core |
+| VLESS-gRPC | cleartext HTTP/2 preface (h2c) | sing-box |
+| WS-TLS, VMess-WS-TLS, Trojan-WS-TLS | TLS, ALPN http/1.1 → gate's TLS server → same WS paths | Node + sing-box |
+| VLESS-gRPC-TLS | TLS, ALPN h2 → gRPC service path | Node / sing-box |
+| Panel / subscription | anything else (plain HTTP or HTTPS) | Node |
+
+TLS links use the gate's self-signed certificate: they carry `allowInsecure=1` for older clients and `pcs=<sha256>` (certificate pin) for Xray-core ≥ 26.2, which rejects `allowInsecure`. The certificate lives in `<data dir>/cert/` — keep that folder so the pin stays the same (it is renewed automatically before it expires; re-import the subscription then).
+
 
 </details>
