@@ -1,0 +1,10 @@
+﻿modules = ["nodejs-20"]
+run = "node index.js"
+
+[deployment]
+run = ["node", "index.js"]
+deploymentTarget = "vm"
+
+[[ports]]
+localPort = 8080
+externalPort = 80
