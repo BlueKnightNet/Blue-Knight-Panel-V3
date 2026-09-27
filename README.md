@@ -1,160 +1,63 @@
-# Blue Knight Gate — Replit Edition
+# Blue Knight Gate: bot-hosting.net Edition
 
-پنل VLESS / VMess / Trojan / XHTTP روی Replit — **ایمپورت کن، Publish کن؛ متغیری لازم نیست.**
+A VLESS / VMess / Trojan / Shadowsocks / XHTTP panel that runs on **bot-hosting.net** (Pterodactyl) using the **one port** your server is given.
 
-A VLESS / VMess / Trojan / XHTTP panel for Replit — **import, publish, done; no variables needed.**
+## Setup on bot-hosting.net
+1. Create a **Node.js** server (Node 18 or newer, 20 recommended).
+2. In **File Manager**, upload `index.js`, `package.json`, `package-lock.json` and the `assets/` folder. Don't upload `node_modules`; it installs itself.
+3. Startup file: `index.js` (the start command is `node index.js`).
+4. Start the server. The panel reads your port from `SERVER_PORT` automatically; you don't need to set it.
+5. On first start, the panel downloads **sing-box** and **Xray-core** from GitHub, so give it a minute.
+6. Open `http://<server-ip>:<port>/knight` and create your panel password.
+7. Copy the configs or the subscription link into your client.
 
-## فارسی
+**Keep the `bk-data/` folder.** It holds your password, UUID and the TLS certificate. If you delete it, every config and TLS pin changes and you'll have to re-import everything.
 
-### راه‌اندازی
-1. توی Replit: **Create App → Import from GitHub** → این ریپو (یا فورک خودت).
-2. **Publish** رو بزن (Autoscale یا Reserved VM). یه آدرس `https://<name>.replit.app` می‌گیری.
-3. برو به `https://<name>.replit.app/knight` و رمز پنل رو بساز.
-4. اگه `replit.app` توی ایران فیلتره، یه **Cloudflare Worker** بساز (پایین‌تر).
-5. پنل رو از آدرس Worker باز کن (`https://<worker>.workers.dev/knight`)؛ لینک‌ها خودکار روی آدرس Worker میرن.
-6. کانفیگ‌ها یا لینک ساب رو کپی کن و توی کلاینتت وارد کن.
+## Configs (all on the same single port)
+| Config | Works in |
+|---|---|
+| VLESS-WS / VLESS-WS-TLS | all clients |
+| VMess-WS / VMess-WS-TLS | all clients |
+| Trojan-WS / Trojan-WS-TLS | all clients (Clash: use only Trojan-WS-TLS) |
+| VLESS / VMess / Trojan HTTPUpgrade | Xray, sing-box (Clash: VLESS and VMess only) |
+| VLESS-gRPC / VLESS-gRPC-TLS | Xray, sing-box, Clash Meta |
+| Shadowsocks-WS | Xray, sing-box, Clash Meta (v2ray-plugin websocket) |
+| VLESS-XHTTP | **Xray clients only** (v2rayN, v2rayNG, Hiddify with the Xray core) |
 
-پورت، دامنه و TLS خودکار تنظیم میشن: همه‌ی لینک‌ها پورت `443` با TLS هستن.
+Every config is named `💞t.me/BlueKnight_Net - <type>` and is included in:
+- the normal base64 subscription
+- the "full" subscription
+- the Clash file
+- the sing-box file
 
-### Cloudflare Worker (وقتی replit.app فیلتره)
-1. **dash.cloudflare.com → Workers & Pages → Create → Worker** → Deploy.
-2. **Edit code**، کد زیر رو جایگزین کن، `ORIGIN` رو آدرس `replit.app` خودت بذار و **Deploy** کن.
-3. پنل رو با `https://<worker>.workers.dev/knight` باز کن و کانفیگ‌ها رو دوباره کپی کن.
+## TLS notes
+- TLS configs use a self-signed certificate.
+- Links carry `allowInsecure=1` for older clients and `pcs=<sha256>` (a certificate pin) for Xray 26.2+.
+- The certificate renews itself before it expires. When that happens, re-import the subscription.
 
-```js
-const ORIGIN = "YOUR-APP.replit.app";
-export default {
-  async fetch(request) {
-    const url = new URL(request.url);
-    const relayHost = url.hostname;
-    url.hostname = ORIGIN; url.protocol = "https:"; url.port = "";
-    const headers = new Headers(request.headers);
-    headers.set("Host", ORIGIN);
-    headers.set("X-Forwarded-Host", relayHost);
-    return fetch(new Request(url, { method: request.method, headers, body: request.body, redirect: "manual" }));
-  },
-};
-```
+## Settings (Startup → Variables, or `.env`)
+All are optional.
 
-پنل آدرس Worker رو از `X-Forwarded-Host` می‌فهمه و ذخیره می‌کنه. اگه خواستی دستی تعیین کنی، Secret به اسم `DOMAIN` با مقدار آدرس Worker بذار (اولویت با `DOMAIN` هست).
+| Variable | Default | Meaning |
+|---|---|---|
+| `UUID` | random, saved in `bk-data` | Fixed UUID for all configs |
+| `PANEL_PASSWORD` | – | Fixed panel password (8+ characters) |
+| `SUB_TOKEN` | random | Fixed subscription token |
+| `SETUP_KEY` | – | Extra key required the first time you create the password |
+| `DOMAIN` | server IP | Domain or host used in links |
+| `ENABLE_TROJAN_WS_TLS` | `true` | Trojan-WS-TLS |
+| `ENABLE_VMESS_HTTPUPGRADE` / `ENABLE_TROJAN_HTTPUPGRADE` | `true` | HTTPUpgrade configs |
+| `ENABLE_VLESS_GRPC` / `ENABLE_VLESS_GRPC_TLS` | `true` | gRPC configs |
+| `ENABLE_SS_WS` | `true` | Shadowsocks-WS |
+| `ENABLE_XHTTP` | `true` | VLESS-XHTTP |
+| `SS_METHOD` / `SS_PASSWORD` | `aes-256-gcm` / random | Shadowsocks cipher and password. For 2022 ciphers, `SS_PASSWORD` must be a base64 key. |
+| `LINK_ALLOW_INSECURE` | `true` | `false` removes `allowInsecure=1` from links |
 
-به‌صورت زنده تست شده: VLESS-WS-TLS و VMess-WS-TLS از طریق Worker کار می‌کنن.
+Turn a config off by setting its variable to `false`, then restart the server.
 
-### مصرف ترافیک
-تب **Usage** توی پنل مصرف هر کانفیگ (VLESS WS، VMess WS، Trojan WS، XHTTP) رو جدا نشون میده: آپلود، دانلود و جمع، برای امروز، این ماه (از ساعت 00:00 UTC روز اول ماه، مثل Replit) و کل زمان، همراه سرعت لحظه‌ای.
-- این عدد **تخمینیه**؛ عدد واقعی صفحه‌ی **Account → Usage** توی Replit هست.
-- شمارنده توی پوشه‌ی داده ذخیره میشه: بعد از ری‌استارت می‌مونه، ولی با هر **Publish** صفر میشه. با فیلد **Sync** عدد ماه رو با Replit یکی کن (Secret لازم نیست).
-- اگه Secret `TRAFFIC_LIMIT_GB` رو بذاری (مثلاً `100`)، نوار پیشرفت و مقدار باقی‌مونده نشون داده میشه و توی ۸۰٪ و ۱۰۰٪ هشدار میده.
-- دکمه‌ی **Reset counter** همه‌ی شمارنده‌ها رو صفر می‌کنه (فقط بعد از ورود به پنل).
-
-### کدوم لینک؟
-- **VLESS-WS-TLS** و **VMess-WS-TLS**: همه‌ی کلاینت‌ها (v2rayNG، v2rayN، Hiddify، NekoBox، sing-box، Clash Meta).
-- **Trojan-WS-TLS**: بیشتر کلاینت‌ها.
-- **VLESS-XHTTP-TLS**: فقط کلاینت‌های با هسته‌ی **Xray** (v2rayNG، v2rayN، Hiddify با هسته‌ی Xray).
-- لینک ساب یه `token` خصوصی داره؛ پخشش نکن.
-
-### مشکل داری؟
-- **آدرس `.replit.dev` کار نمی‌کنه:** اون آدرس خصوصی محیط ویرایشه. حتماً **Publish** کن و از `.replit.app` یا Worker استفاده کن.
-- **فقط کانفیگ‌های TLS (پورت 443):** روی Replit فقط 443 عمومیه؛ کانفیگ بدون TLS هیچ‌وقت وصل نمیشه.
-- **تست:** از **Real delay** یا تست URL استفاده کن، نه TCP ping.
-- **IP تمیز:** فقط address رو با یه IP تمیز کلادفلر (از اسکنر) عوض کن؛ `sni` و `host` روی آدرس Worker بمونن.
-- **بعد از هر Publish رمز و کانفیگ‌ها عوض میشن:** فایل‌های اپ Publish‌شده روی Replit موندگار نیستن. برای ثابت موندن، توی **Publishing → Secrets** این‌ها رو بذار: `UUID`، `PANEL_PASSWORD`، `SUB_TOKEN`.
-
-## English
-
-### Setup
-1. Replit: **Create App → Import from GitHub** → this repo (or your fork).
-2. Click **Publish** (Autoscale or Reserved VM). You get `https://<name>.replit.app`.
-3. Open `https://<name>.replit.app/knight` and create the panel password.
-4. If `replit.app` is filtered (e.g. in Iran), create a **Cloudflare Worker** (below).
-5. Open the panel through the Worker (`https://<worker>.workers.dev/knight`); links switch to the Worker address automatically.
-6. Copy the configs or the subscription link into your client.
-
-Port, domain and TLS are set automatically: every link uses port `443` with TLS.
-
-### Cloudflare Worker (when replit.app is filtered)
-1. **dash.cloudflare.com → Workers & Pages → Create → Worker** → Deploy.
-2. **Edit code**, paste the code above (Persian section), set `ORIGIN` to your `replit.app` address, then **Deploy**.
-3. Open `https://<worker>.workers.dev/knight` and copy the configs again.
-
-The panel learns the Worker address from `X-Forwarded-Host` and saves it. To set it by hand, add a `DOMAIN` Secret with the Worker address (`DOMAIN` always wins).
-
-Tested live: VLESS-WS-TLS and VMess-WS-TLS work through the Worker.
-
-### Traffic usage
-The panel's **Usage** tab shows traffic per config (VLESS WS, VMess WS, Trojan WS, XHTTP): upload, download and total for today, this month (from 00:00 UTC on the 1st, like Replit's meter) and all time, plus live speed.
-- It's an **estimate**; Replit's **Account → Usage** page is the real meter.
-- The counter is saved in the data folder: it survives restarts but resets on every **Publish**. Use the **Sync** field to set this month's number from Replit (no Secret needed).
-- Set the `TRAFFIC_LIMIT_GB` Secret (e.g. `100`) to get a progress bar with the remaining amount and warnings at 80% and 100%.
-- **Reset counter** clears all counters (panel login required).
-
-### Which link?
-- **VLESS-WS-TLS** / **VMess-WS-TLS**: any client (v2rayNG, v2rayN, Hiddify, NekoBox, sing-box, Clash Meta).
-- **Trojan-WS-TLS**: most clients.
-- **VLESS-XHTTP-TLS**: **Xray-core** clients only (v2rayNG, v2rayN, Hiddify with the Xray core).
-- Subscription URLs contain a private `token` — don't share them.
-
-### Troubleshooting
-- **The `.replit.dev` URL doesn't work:** it's the private editor URL. **Publish** and use `.replit.app` or the Worker.
-- **Use only the TLS configs (port 443):** only 443 is public on Replit; non-TLS configs never connect.
+## Troubleshooting
+- **XHTTP or Shadowsocks links are missing:** Xray failed to download. Check the console, then restart.
+- **TLS config won't connect in a new Xray app:** re-import the subscription so the link has the current `pcs=` pin.
+- **Configs changed after a restart:** `bk-data/` was deleted or reset. Set `UUID`, `PANEL_PASSWORD` and `SUB_TOKEN` as variables so they stay the same.
 - **Testing:** use **Real delay** or the URL test, not TCP ping.
-- **Clean IP:** change only the address to a clean Cloudflare IP (from a scanner); keep `sni` / `host` on the Worker address.
-- **Password / configs change after every Publish:** a published Replit app's files are not persistent. To keep them, add these in **Publishing → Secrets**: `UUID`, `PANEL_PASSWORD`, `SUB_TOKEN`.
-
-<details>
-<summary><b>Optional settings (not required) / تنظیمات اختیاری (لازم نیست)</b></summary>
-
-Replit → **Publishing → Secrets** (deployment Secrets are separate from the editor's; publish again after changing them). / همه اختیاری‌ان.
-
-| Secret | Default | Meaning |
-|---|---|---|
-| `DOMAIN` | `replit.app` address / Worker address you open the panel with | Force the domain used in links (bare hostname) |
-| `UUID` | random, saved in the data folder | Fixed UUID so configs survive a new Publish |
-| `PANEL_PASSWORD` | – | Fixed panel password (8+ characters); skips the create-password page |
-| `SUB_TOKEN` | random | Fixed subscription token so subscription URLs survive a new Publish |
-| `SETUP_KEY` | empty | Extra key asked for when creating the password the first time |
-| `RESET_PANEL_PASSWORD` | – | `true` → publish → create a new password → **delete the secret** |
-| `FORCE_HOST` | – | Force the link address (e.g. a clean IP); SNI/Host stay on `DOMAIN` |
-| `LINK_SNI` / `LINK_HOST` | link domain | Separate SNI / WS Host header |
-| `LINK_PORT` / `LINK_TLS` | `443` / on | Port in links / TLS on or off (not needed on Replit) |
-| `LINK_FP` | `chrome` | uTLS fingerprint: `chrome` `firefox` `safari` `edge` `ios` `android` `random` `randomized` `360` `qq`, or `none` |
-| `LINK_ALPN` | `http/1.1` | ALPN for WS links (keep `http/1.1`); `none` = omit |
-| `ENABLE_XHTTP` | `true` | `false` = no XHTTP link (Xray is still used if `ENABLE_SS_WS` is on) |
-| `ENABLE_VLESS_WS` / `ENABLE_VLESS_WS_TLS` / `ENABLE_VMESS_WS` / `ENABLE_VMESS_WS_TLS` | `true` | Turn single WS configs on/off |
-| `ENABLE_TROJAN_WS` / `ENABLE_TROJAN_WS_TLS` | `true` | Trojan-WS / Trojan-WS-TLS |
-| `ENABLE_HTTPUPGRADE` / `ENABLE_VMESS_HTTPUPGRADE` / `ENABLE_TROJAN_HTTPUPGRADE` | `true` | VLESS / VMess / Trojan HTTPUpgrade |
-| `ENABLE_VLESS_GRPC` / `ENABLE_VLESS_GRPC_TLS` | `true` | VLESS gRPC (h2c) / VLESS gRPC-TLS — self-hosted port only |
-| `ENABLE_SS_WS` | `true` | Shadowsocks over WebSocket (v2ray-plugin compatible, served by Xray) — self-hosted port only |
-| `SS_METHOD` / `SS_PASSWORD` | `aes-256-gcm` / random | Shadowsocks cipher (`aes-256-gcm`, `chacha20-ietf-poly1305`, `2022-blake3-aes-256-gcm`, …). 2022 ciphers need a base64 key (`openssl rand -base64 32`); an invalid one is replaced by a generated key |
-| `LINK_ALLOW_INSECURE` | `true` | Self-signed cert only: `false` = drop `allowInsecure=1` from links (links always carry `pcs=` = cert SHA-256 for Xray ≥ 26.2) |
-| `XRAY_VERSION` / `XRAY_URL` | latest | Pin the Xray-core version / custom zip URL |
-| `XHTTP_MODE` | `packet-up` | `packet-up`, `stream-up`, `stream-one` or `auto` |
-| `XHTTP_ALPN` | `h2` | ALPN in the XHTTP link |
-| `TRAFFIC_LIMIT_GB` | none | Monthly allowance in GiB for the Usage tab (progress bar, warnings at 80% / 100%) |
-| `BK_DATA_DIR` | `./bk-data` | Data folder (password, UUID, configs) |
-| `PORT` | `8080` | Listening port (matches `.replit`) |
-
-Railway still works as a fallback (same code, `RAILWAY_*` detection).
-
-</details>
-
-<details>
-<summary><b>Self-hosted single port (bot-hosting.net / Pterodactyl, VPS)</b></summary>
-
-Everything shares the ONE allocated port (`SERVER_PORT` / `PORT`). The built-in multiplexer routes each connection:
-
-| Config | How it is recognised on the shared port | Engine |
-|---|---|---|
-| VLESS-WS, VMess-WS, Trojan-WS | HTTP Upgrade, path `…--ws` / `…--vmess` / `…--trojan` | sing-box |
-| VLESS/VMess/Trojan-HTTPUpgrade | HTTP Upgrade, path `…--httpupgrade` / `…--vmess-hu` / `…--trojan-hu` | sing-box |
-| VLESS-XHTTP | HTTP requests under `…--xhttp` | Xray-core |
-| Shadowsocks-WS | HTTP Upgrade, path `…--ss` (v2ray-plugin `mode=websocket;mux=0`) | Xray-core |
-| VLESS-gRPC | cleartext HTTP/2 preface (h2c) | sing-box |
-| WS-TLS, VMess-WS-TLS, Trojan-WS-TLS | TLS, ALPN http/1.1 → gate's TLS server → same WS paths | Node + sing-box |
-| VLESS-gRPC-TLS | TLS, ALPN h2 → gRPC service path | Node / sing-box |
-| Panel / subscription | anything else (plain HTTP or HTTPS) | Node |
-
-TLS links use the gate's self-signed certificate: they carry `allowInsecure=1` for older clients and `pcs=<sha256>` (certificate pin) for Xray-core ≥ 26.2, which rejects `allowInsecure`. The certificate lives in `<data dir>/cert/` — keep that folder so the pin stays the same (it is renewed automatically before it expires; re-import the subscription then).
-
-
-</details>
+- **Keep the subscription URL private.** It contains your token.
