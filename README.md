@@ -1,13 +1,13 @@
-# Blue Knight Gate: bot-hosting.net Edition
+# Blue Knight Gate: 
 
-A VLESS / VMess / Trojan / Shadowsocks / XHTTP panel that runs on **bot-hosting.net** (Pterodactyl) using the **one port** your server is given.
+A VLESS / VMess / Trojan / Shadowsocks / XHTTP panel that runs on **Free Hosts** (Pterodactyl) using the **one port** your server is given.
 
 ## Follow Blue Knight
 - 📢 Telegram: [@BlueKnight_Net](https://t.me/BlueKnight_Net)
 - ▶️ YouTube: [@BlueKnight-Net](https://www.youtube.com/@BlueKnight-Net)
 
 
-## Setup on bot-hosting.net
+## Setup on Free Hosts
 1. Create a **Node.js** server (Node 18 or newer, 20 recommended).
 2. In **File Manager**, upload `index.js`, `package.json`, `package-lock.json` and the `assets/` folder. Don't upload `node_modules`; it installs itself.
 3. Startup file: `index.js` (the start command is `node index.js`).
